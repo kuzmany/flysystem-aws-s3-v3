@@ -80,6 +80,8 @@ class AwsS3Adapter extends AbstractAdapter implements CanOverwriteFiles
      */
     private $streamReads;
 
+    protected array $cacheStat = [];
+
     public function __construct(S3ClientInterface $client, $bucket, $prefix = '', array $options = [], $streamReads = true)
     {
         $this->s3Client = $client;
@@ -276,7 +278,9 @@ class AwsS3Adapter extends AbstractAdapter implements CanOverwriteFiles
         $listing = $this->retrievePaginatedListing($options);
         $normalizer = [$this, 'normalizeResponse'];
         $normalized = array_map($normalizer, $listing);
-
+        foreach ($normalized as $item) {
+            $this->cacheStat[$item['path']] = $item;
+        }
         return Util::emulateDirectories($normalized);
     }
 
@@ -306,6 +310,10 @@ class AwsS3Adapter extends AbstractAdapter implements CanOverwriteFiles
      */
     public function getMetadata($path)
     {
+        if (isset($this->cacheStat[$path])) {
+            return  $this->cacheStat[$path];
+        }
+
         $command = $this->s3Client->getCommand(
             'headObject',
             [
@@ -324,8 +332,9 @@ class AwsS3Adapter extends AbstractAdapter implements CanOverwriteFiles
 
             throw $exception;
         }
-
-        return $this->normalizeResponse($result->toArray(), $path);
+        
+        $this->cacheStat[$path] = $this->normalizeResponse($result->toArray(), $path);
+        return $this->cacheStat[$path];
     }
 
     /**
