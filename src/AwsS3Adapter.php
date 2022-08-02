@@ -281,6 +281,7 @@ class AwsS3Adapter extends AbstractAdapter implements CanOverwriteFiles
         foreach ($normalized as $item) {
             $this->cacheStat[$item['path']] = $item;
         }
+        $_SESSION['elFinderCaches']['cacheStats'][$directory] = $this->cacheStat;
         return Util::emulateDirectories($normalized);
     }
 
@@ -312,6 +313,14 @@ class AwsS3Adapter extends AbstractAdapter implements CanOverwriteFiles
     {
         if (isset($this->cacheStat[$path])) {
             return  $this->cacheStat[$path];
+        }
+
+        if (isset($_SESSION['elFinderCaches']['cacheStats'])) {
+            foreach ($_SESSION['elFinderCaches']['cacheStats'] as $cacheStat) {
+                if (isset($cacheStat[$path])) {
+                    return  $cacheStat[$path];
+                }
+            }
         }
 
         $command = $this->s3Client->getCommand(
