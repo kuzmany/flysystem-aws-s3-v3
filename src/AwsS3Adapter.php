@@ -381,7 +381,7 @@ class AwsS3Adapter extends AbstractAdapter implements CanOverwriteFiles
      */
     public function getMimetype($path)
     {
-        return $this->mime_type($path);
+        return $this->getMimeTypeFromPath($path);
     }
 
     private function getMimeTypeFromPath($path) {
