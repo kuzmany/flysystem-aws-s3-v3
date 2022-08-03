@@ -279,6 +279,9 @@ class AwsS3Adapter extends AbstractAdapter implements CanOverwriteFiles
         $normalizer = [$this, 'normalizeResponse'];
         $normalized = array_map($normalizer, $listing);
         foreach ($normalized as $item) {
+            if (!isset($item['mimetype'])) {
+                $item['mimetype'] = $this->getMimeTypeFromPath($item['path']);
+            }
             $this->cacheStat[$item['path']] = $item;
         }
         $_SESSION['elFinderCaches']['cacheStats'][$directory] = $this->cacheStat;
